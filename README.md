@@ -1,9 +1,9 @@
-<h1>About API</h1>
+<h1 align="center">About API</h1>
 <p>
-  API can: add, delete, partially update and do <strong>diacritic independent</strong> search on category/categories. Usage details are avaliable after installing and runnin api in related Swagger Open API docs
+  API can: add, remove, partially update, and perform diacritically independent category searches. Usage details are available after installing and running the API on your local host in the Swagger documentation.
 </p>
-<h2>About key feature</h2>
-<p>You can find a category written with diacritics by a parameter "search" passed in without diacritics. For example, by passing the word "Мед" you can find the category "Мёд" and vice versa. The problem was solved by adding an extension to PostgreSQL during docker container build process through the bash script</p>
+<h2 align="center">About key feature</h2>
+<p>You can find a category written with diacritics by a parameter "search" passed in without diacritics. For example, by passing the word "Мед" you can find the category "Мёд" and vice versa. The problem was solved by adding an extension to PostgreSQL during docker container build process through the bash script.</p>
 </p>
 <hr>
 <h2 align="center">API installation and run instructions</h1>
