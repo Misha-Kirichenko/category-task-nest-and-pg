@@ -1,26 +1,25 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  CreateCategoryDto,
-  CategoryByParamDto,
-  UpdateCategoryDto,
-  GetCategoriesDto,
-} from './dto';
+import { CreateCategoryDto, UpdateCategoryDto, GetCategoriesDto } from './dto';
 import { Category } from './entities';
 
 @Injectable()
 export class CategoryService {
+  defaultPageSize: number;
   constructor(
     @InjectRepository(Category)
     private categoryRepository: Repository<Category>,
-  ) {}
+  ) {
+    this.defaultPageSize = 4;
+  }
 
-  private formatParamObject(param: CategoryByParamDto) {
+  private formatParamObject(param: string) {
     return Number.isInteger(Number(param))
       ? { id: Number(param) }
       : { slug: param.toString() };
@@ -29,9 +28,8 @@ export class CategoryService {
   async getList(query: GetCategoriesDto): Promise<Category[]> {
     let categories: Category[];
     const page = Number(query.page) ? Number(query.page) : 1;
-    const limit = 2;
     const partial: number =
-      (page - 1) * (query.pageSize ? query.pageSize : limit);
+      (page - 1) * (query.pageSize ? query.pageSize : this.defaultPageSize);
 
     const orderBy: [string, 'ASC' | 'DESC'] = query.sort
       ? [
@@ -82,10 +80,11 @@ export class CategoryService {
         .select()
         .where(bindString, bindParams)
         .offset(partial)
-        .limit(query.pageSize ? query.pageSize : limit)
+        .limit(query.pageSize ? query.pageSize : this.defaultPageSize)
         .orderBy(...orderBy)
         .getMany();
     } catch (_) {
+      console.log(_);
       throw new BadRequestException({
         msg: 'Opps... Something went wrong',
       });
@@ -95,9 +94,21 @@ export class CategoryService {
   }
 
   async createCategory(categoryDto: CreateCategoryDto): Promise<Category> {
+    let newCategory: Category;
+    let foundCategory: Category;
+    foundCategory = await this.categoryRepository.findOne({
+      where: [{ name: categoryDto.name }, { slug: categoryDto.slug }],
+    });
+
+    if (foundCategory)
+      throw new ConflictException({
+        msg: 'Category with the same slug or name already exists',
+      });
+
     try {
-      const newCategory = this.categoryRepository.create(categoryDto);
-      return await this.categoryRepository.save(newCategory);
+      newCategory = this.categoryRepository.create(categoryDto);
+      await this.categoryRepository.save(newCategory);
+      return newCategory;
     } catch (_) {
       throw new BadRequestException({
         msg: 'Opps... Something went wrong',
@@ -118,14 +129,20 @@ export class CategoryService {
         categoryDto,
       );
       updated = affected;
-    } catch (_) {
+    } catch (error) {
+      if (error.code === '23505')
+        throw new ConflictException({
+          msg: 'Category with same name or slug already exists',
+        });
+
       throw new BadRequestException({
         msg: 'Opps... Something went wrong',
       });
     }
+
     if (!updated)
       throw new NotFoundException({
-        msg: `category is not found`,
+        msg: `category was not found`,
       });
 
     return { msg: 'category was successfully updated' };
@@ -150,7 +167,7 @@ export class CategoryService {
     return { msg: `category removed successfully` };
   }
 
-  async getCategoryByParam(param: CategoryByParamDto): Promise<Category> {
+  async getCategoryByParam(param: string): Promise<Category> {
     const paramObj = this.formatParamObject(param);
     let found: Category;
     try {

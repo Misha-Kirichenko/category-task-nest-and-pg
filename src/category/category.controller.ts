@@ -15,14 +15,10 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
   ApiBadRequestResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import { CategoryService } from './category.service';
-import {
-  GetCategoriesDto,
-  CreateCategoryDto,
-  CategoryByParamDto,
-  UpdateCategoryDto,
-} from './dto';
+import { GetCategoriesDto, CreateCategoryDto, UpdateCategoryDto } from './dto';
 import { Category } from './entities';
 
 @Controller('category')
@@ -48,40 +44,6 @@ export class CategoryController {
   @Get()
   getAllCategories(@Query() query: GetCategoriesDto): Promise<Category[]> {
     return this.categoryService.getList(query);
-  }
-
-  @ApiOkResponse({
-    description: 'returns category found by id/slug',
-    type: Category,
-  })
-  @ApiBadRequestResponse({
-    schema: {
-      type: 'object',
-      example: {
-        statusCode: 400,
-        message: [
-          'param must match /^(?:[0-9]+|[a-zA-Z\\-_]+)$/g regular expression',
-        ],
-        error: 'Bad Request',
-      },
-    },
-    description: 'Param validation error',
-  })
-  @ApiNotFoundResponse({
-    schema: {
-      type: 'object',
-      example: {
-        msg: 'Category not found',
-      },
-    },
-    description: 'category not found',
-  })
-  @ApiTags('Get category by id/slug')
-  @Get('/byParam/:param')
-  getCategoryByParam(
-    @Param() { param }: CategoryByParamDto,
-  ): Promise<Category> {
-    return this.categoryService.getCategoryByParam(param as any);
   }
 
   @ApiOkResponse({
@@ -140,6 +102,15 @@ export class CategoryController {
     },
     description: 'Body validation errors',
   })
+  @ApiConflictResponse({
+    schema: {
+      type: 'object',
+      example: {
+        msg: 'Category with the same slug or name already exists',
+      },
+    },
+    description: 'Conflict response',
+  })
   @ApiTags('Create new category')
   @Post()
   async createCategory(
@@ -183,6 +154,15 @@ export class CategoryController {
     },
     description: 'category was not found',
   })
+  @ApiConflictResponse({
+    schema: {
+      type: 'object',
+      example: {
+        msg: 'Category with the same slug or name already exists',
+      },
+    },
+    description: 'Conflict response',
+  })
   @ApiTags('Update category')
   @Patch(':id')
   async updateCategory(
@@ -190,5 +170,24 @@ export class CategoryController {
     @Body() categoryDto: UpdateCategoryDto,
   ): Promise<{ msg: string }> {
     return await this.categoryService.updateCategory(id, categoryDto);
+  }
+
+  @ApiOkResponse({
+    description: 'returns category found by id/slug',
+    type: Category,
+  })
+  @ApiNotFoundResponse({
+    schema: {
+      type: 'object',
+      example: {
+        msg: 'category was not found',
+      },
+    },
+    description: 'category not found',
+  })
+  @ApiTags('Get category by id/slug')
+  @Get('/:param')
+  getCategoryByParam(@Param('param') param: string): Promise<Category> {
+    return this.categoryService.getCategoryByParam(param);
   }
 }
