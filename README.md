@@ -7,7 +7,7 @@
   <li>Docker</li>
   <li>Bash</li>
 </ul>
-<h2 align="center">About key feature</h2>
+<h2 align="center">About key features</h2>
   <ul>
     <li>Filtering categories by</li>
     <ul>
