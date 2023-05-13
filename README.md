@@ -1,13 +1,13 @@
 <h1 align="center">About API</h1>
 <h2>Technogies stack:</h2>
 <ul>
-  <li>Nest.js</li>
-  <li>TypeScript</li>
+  <li>Nest.js / TypeScript</li>
   <li>TypeORM / PostgreSQL</li>
+  <li>Swagger</li>
   <li>Docker</li>
   <li>Bash</li>
 </ul>
-<h2 align="center">About key features</h2>
+<h2 align="center">Key features</h2>
   <ul>
     <li>Filtering categories by</li>
     <ul>
